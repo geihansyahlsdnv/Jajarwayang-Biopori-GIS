@@ -512,7 +512,7 @@ function getStatusColor(item) {
 async function deleteLocation(id) {
     // Check if user is owner
     if (!isOwner) {
-        alert('⛔ Hanya admin yang bisa menghapus lokasi.\nSilakan login dengan akun admin.');
+        alert('⛔ Hanya admin yang bisa menghapus lokasi. awokaowkwok\nSilakan login dengan akun admin.');
         return;
     }
     
@@ -585,7 +585,7 @@ let currentEditingId = null;
 
 function openEditModal(id) {
     if (!isOwner) {
-        alert('⛔ Hanya admin yang bisa mengubah data.\nSilakan login dengan akun admin.');
+        alert('⛔ Hanya admin yang bisa mengubah data. aowkawokwok\nSilakan login dengan akun admin.');
         return;
     }
 
@@ -1182,7 +1182,7 @@ addLocationForm?.addEventListener('submit', async function(e) {
     
     // Check permission - only owner can add locations
     if (!isOwner) {
-        alert('⛔ Hanya admin yang dapat menambahkan lokasi baru. Silakan login dengan akun admin.');
+        alert('⛔ Hanya admin yang dapat menambahkan lokasi baru. aowkaowkwok Silakan login dengan akun admin.');
         return;
     }
     
@@ -1409,7 +1409,7 @@ document.getElementById('edit-location-form')?.addEventListener('submit', async 
     e.preventDefault();
     
     if (!isOwner) {
-        alert('⛔ Hanya admin yang dapat mengubah data.');
+        alert('⛔ Hanya admin yang dapat mengubah data. awokawokwok');
         return;
     }
     
