@@ -42,10 +42,26 @@ window.FirebaseService = FirebaseService;
 
 let currentUser = null;
 let isOwner = false;
+let dataLoaded = false;
 
 // Load initial data on page load (PUBLIC mode - everyone can see markers)
-console.log('[Init] Loading initial biopori data for public view...');
-await loadData();
+// Wait a bit for Firebase to initialize
+async function loadInitialData() {
+    try {
+        console.log('[Init] Loading initial biopori data for public view...');
+        await loadData();
+        dataLoaded = true;
+        console.log('[Init] Initial data loaded successfully');
+    } catch (error) {
+        console.error('[Init] Failed to load initial data:', error);
+        // Retry after delay
+        console.log('[Init] Retrying data load in 2 seconds...');
+        setTimeout(loadInitialData, 2000);
+    }
+}
+
+// Start loading data after a small delay to ensure Firebase is ready
+setTimeout(loadInitialData, 500);
 
 // Setup auth listener for login/logout
 FirebaseService.onAuthStateChange(async (user) => {
@@ -608,9 +624,11 @@ async function loadData() {
         updateStatistics();
         
         console.log(`[Firebase] Loaded ${allData.length} records from Firebase`);
+        return true;
     } catch (error) {
         console.error('[Firebase] Load error:', error);
-        alert('Gagal memuat data dari Firebase. Pastikan koneksi internet aktif.');
+        console.warn('[Firebase] Will retry loading data...');
+        throw error; // Re-throw untuk retry logic
     }
 }
 
