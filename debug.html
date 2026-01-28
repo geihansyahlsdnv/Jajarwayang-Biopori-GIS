@@ -102,14 +102,34 @@
         if (window.L) {
             libHTML += `<code class="success">✓ Leaflet v${window.L.version} loaded</code>`;
         } else {
-            libHTML += `<code class="error">✗ Leaflet NOT loaded</code>`;
+            libHTML += `<code class="error">✗ Leaflet NOT loaded - Trying to load from CDN...</code>`;
+            // Try loading dynamically
+            const leafletScript = document.createElement('script');
+            leafletScript.src = 'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.js';
+            leafletScript.onload = () => {
+                console.log('✓ Leaflet loaded dynamically');
+            };
+            leafletScript.onerror = () => {
+                console.error('✗ Failed to load Leaflet');
+            };
+            document.head.appendChild(leafletScript);
         }
 
         // Turf
         if (window.turf) {
             libHTML += `<code class="success">✓ Turf.js loaded</code>`;
         } else {
-            libHTML += `<code class="error">✗ Turf.js NOT loaded</code>`;
+            libHTML += `<code class="error">✗ Turf.js NOT loaded - Trying to load from CDN...</code>`;
+            // Try loading dynamically
+            const turfScript = document.createElement('script');
+            turfScript.src = 'https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js';
+            turfScript.onload = () => {
+                console.log('✓ Turf.js loaded dynamically');
+            };
+            turfScript.onerror = () => {
+                console.error('✗ Failed to load Turf.js');
+            };
+            document.head.appendChild(turfScript);
         }
 
         // Firebase
