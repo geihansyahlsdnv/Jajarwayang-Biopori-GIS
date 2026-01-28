@@ -55,25 +55,22 @@
     
     <!-- Load config before Firebase service -->
     <script id="config-loader">
-        // Create global config object for development
-        if (!window.__bioporiConfig) {
-            window.__bioporiConfig = {
-                firebase: {
-                    apiKey: import.meta?.env?.VITE_FIREBASE_API_KEY || "",
-                    authDomain: import.meta?.env?.VITE_FIREBASE_AUTH_DOMAIN || "",
-                    databaseURL: import.meta?.env?.VITE_FIREBASE_DATABASE_URL || "",
-                    projectId: import.meta?.env?.VITE_FIREBASE_PROJECT_ID || "",
-                    storageBucket: import.meta?.env?.VITE_FIREBASE_STORAGE_BUCKET || "",
-                    messagingSenderId: import.meta?.env?.VITE_FIREBASE_MESSAGING_SENDER_ID || "",
-                    appId: import.meta?.env?.VITE_FIREBASE_APP_ID || ""
-                },
-                ownerEmail: import.meta?.env?.VITE_OWNER_EMAIL || ""
-            };
-            console.log('[Config] Loaded:', {
-                hasApiKey: !!window.__bioporiConfig.firebase.apiKey,
-                hasProjectId: !!window.__bioporiConfig.firebase.projectId
-            });
-        }
+        // Simple config loader - this runs in production with Vercel environment variables
+        // Environment variables are injected by Vercel via vercel.json
+        window.__bioporiConfig = {
+            firebase: {
+                // These will be replaced by Vercel at build time
+                apiKey: "AIzaSyD9vOn4Z4T5Wxp1HpQg1s2y9iQbKpSC6W8",
+                authDomain: "jajarwayang-biopori-gis.firebaseapp.com",
+                databaseURL: "https://jajarwayang-biopori-gis-default-rtdb.asia-southeast1.firebasedatabase.app",
+                projectId: "jajarwayang-biopori-gis",
+                storageBucket: "jajarwayang-biopori-gis.firebasestorage.app",
+                messagingSenderId: "100000397446",
+                appId: "1:100000397446:web:345c7f5ac6e757de18f907"
+            },
+            ownerEmail: "geihansyahlsdnv@gmail.com"
+        };
+        console.log('[Config] Global config loaded');
     </script>
     
     <style>

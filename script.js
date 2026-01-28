@@ -10,35 +10,28 @@ import FirebaseService from './firebaseService.js';
 // Get OWNER_EMAIL dari berbagai source
 let OWNER_EMAIL;
 
-// Priority 1: Global config (from HTML)
+// Priority 1: Global config (from HTML) - works in production
 if (window.__bioporiConfig?.ownerEmail) {
     OWNER_EMAIL = window.__bioporiConfig.ownerEmail;
-    console.log('[Config] OWNER_EMAIL from window.__bioporiConfig');
+    console.log('[Config] OWNER_EMAIL from window.__bioporiConfig:', OWNER_EMAIL);
 }
-// Priority 2: Environment variables
-else if (import.meta?.env?.VITE_OWNER_EMAIL) {
-    OWNER_EMAIL = import.meta.env.VITE_OWNER_EMAIL;
-    console.log('[Config] OWNER_EMAIL from import.meta.env');
-}
-// Priority 3: Local config files
+// Priority 2: Local config files (development)
 else {
     try {
         const config = await import('./config.js.local');
         OWNER_EMAIL = config.OWNER_EMAIL;
-        console.log('[Config] OWNER_EMAIL from config.js.local');
+        console.log('[Config] OWNER_EMAIL from config.js.local:', OWNER_EMAIL);
     } catch (e) {
         try {
             const config = await import('./config.js');
             OWNER_EMAIL = config.OWNER_EMAIL;
-            console.log('[Config] OWNER_EMAIL from config.js');
+            console.log('[Config] OWNER_EMAIL from config.js:', OWNER_EMAIL);
         } catch (e2) {
             console.warn('[Config] OWNER_EMAIL not found - readonly mode');
             OWNER_EMAIL = null;
         }
     }
 }
-
-console.log('[Config] OWNER_EMAIL:', OWNER_EMAIL || 'not set');
 
 // Expose to global scope for console and onclick handlers
 window.FirebaseService = FirebaseService;

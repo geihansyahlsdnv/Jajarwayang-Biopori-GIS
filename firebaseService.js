@@ -29,27 +29,18 @@ let firebaseConfig;
 
 console.log('[Firebase Init] Checking for config...');
 
-// Priority 1: Global config from HTML (set via import.meta.env)
+// Priority 1: Global config from HTML (this is set by index.html and works in production)
 if (window.__bioporiConfig?.firebase?.apiKey) {
     console.log('[Firebase] Using config from window.__bioporiConfig');
     firebaseConfig = window.__bioporiConfig.firebase;
+    console.log('[Firebase] Config loaded successfully', {
+        apiKey: firebaseConfig.apiKey?.substring(0, 20) + '...',
+        projectId: firebaseConfig.projectId
+    });
 }
-// Priority 2: Environment variables (Vercel)
-else if (typeof import.meta !== 'undefined' && import.meta.env?.VITE_FIREBASE_API_KEY) {
-    console.log('[Firebase] Using config from import.meta.env');
-    firebaseConfig = {
-        apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-        authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-        databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL,
-        projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-        storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-        messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-        appId: import.meta.env.VITE_FIREBASE_APP_ID
-    };
-}
-// Priority 3: Local config files (development)
+// Priority 2: Local config files (development)
 else {
-    console.log('[Firebase] Attempting to load from config.js.local or config.js...');
+    console.log('[Firebase] Global config not found, trying local files...');
     try {
         const configModule = await import("./config.js.local");
         firebaseConfig = configModule.default;
@@ -61,10 +52,10 @@ else {
             console.log('[Firebase] Loaded from config.js');
         } catch (e2) {
             console.error('[Firebase] CRITICAL: No config found!', {
-                error1: e1.message,
-                error2: e2.message
+                globalConfigExists: !!window.__bioporiConfig,
+                error: 'Neither global config nor local files available'
             });
-            throw new Error('Firebase config not found. Check console for details.');
+            throw new Error('Firebase config not found. Check that window.__bioporiConfig is set in index.html');
         }
     }
 }
