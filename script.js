@@ -7,19 +7,28 @@
 // Import Firebase Service & Config
 import FirebaseService from './firebaseService.js';
 
-// Try to import from config.js.local (development) or fall back to config.js
+// Get OWNER_EMAIL from environment or fallback to config file
 let OWNER_EMAIL;
-try {
-    const config = await import('./config.js.local');
-    OWNER_EMAIL = config.OWNER_EMAIL;
-} catch (e) {
+
+// Try environment variable first (Vercel production)
+if (import.meta.env.VITE_OWNER_EMAIL) {
+    OWNER_EMAIL = import.meta.env.VITE_OWNER_EMAIL;
+    console.log('[Config] OWNER_EMAIL loaded from environment variables');
+} else {
+    // Try development file
     try {
-        const config = await import('./config.js');
+        const config = await import('./config.js.local');
         OWNER_EMAIL = config.OWNER_EMAIL;
-    } catch (e2) {
-        console.error('[Config] Neither config.js nor config.js.local found!');
-        console.error('[Config] Please copy .env.example to config.js.local and fill in your Firebase credentials');
-        OWNER_EMAIL = null;
+        console.log('[Config] OWNER_EMAIL loaded from config.js.local');
+    } catch (e) {
+        try {
+            const config = await import('./config.js');
+            OWNER_EMAIL = config.OWNER_EMAIL;
+            console.log('[Config] OWNER_EMAIL loaded from config.js');
+        } catch (e2) {
+            console.error('[Config] OWNER_EMAIL not found!');
+            OWNER_EMAIL = null;
+        }
     }
 }
 

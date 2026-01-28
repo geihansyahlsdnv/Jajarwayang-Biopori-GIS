@@ -24,19 +24,37 @@ import {
     onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-// Try to import config from development file first
+// Load Firebase config from environment variables (Vercel/Production) or import from file (Development)
 let firebaseConfig;
-try {
-    const config = await import("./config.js.local");
-    firebaseConfig = config.default;
-} catch (e) {
+
+// Try environment variables first (Vercel production)
+if (import.meta.env.VITE_FIREBASE_API_KEY) {
+    console.log('[Firebase] Loading config from environment variables (production)');
+    firebaseConfig = {
+        apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+        authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+        databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL,
+        projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+        storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+        messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+        appId: import.meta.env.VITE_FIREBASE_APP_ID
+    };
+} else {
+    // Try development file
     try {
-        const config = await import("./config.js");
+        console.log('[Firebase] Loading config from config.js.local (development)');
+        const config = await import("./config.js.local");
         firebaseConfig = config.default;
-    } catch (e2) {
-        console.error('[Firebase] Config file not found!');
-        console.error('[Firebase] Please create config.js.local with your Firebase credentials');
-        throw new Error('Firebase configuration not found. Copy .env.example to config.js.local');
+    } catch (e) {
+        try {
+            const config = await import("./config.js");
+            firebaseConfig = config.default;
+        } catch (e2) {
+            console.error('[Firebase] Config not found!');
+            console.error('[Firebase] For development: create config.js.local with your Firebase credentials');
+            console.error('[Firebase] For Vercel: add environment variables: VITE_FIREBASE_API_KEY, VITE_FIREBASE_AUTH_DOMAIN, etc.');
+            throw new Error('Firebase configuration not found. See console for details.');
+        }
     }
 }
 
