@@ -337,15 +337,28 @@ async function loadDesaBoundary() {
             }
         }).addTo(map);
         
-        // Set maxBounds agar peta tidak bisa keluar dari desa
+        // Set relaxed maxBounds dengan buffer untuk lihat area perbatasan
+        // Expand bounds by ~15% untuk kenyamanan viewing area perbatasan
         const bounds = getBoundaryBounds(desaBoundary);
-        map.setMaxBounds(bounds);
+        const expandedBounds = expandBounds(bounds, 0.15); // Expand 15%
+        map.setMaxBounds(expandedBounds);
         map.fitBounds(bounds, { padding: [50, 50] });
         
-        console.log('[Boundary] Desa Jajarwayang boundary loaded');
+        console.log('[Boundary] Desa Jajarwayang boundary loaded (with relaxed pan limits)');
     } catch (error) {
         console.error('[Boundary] Error loading GeoJSON:', error);
     }
+}
+
+// Function to expand bounds by percentage (for relaxed panning at edges)
+function expandBounds(bounds, percentage) {
+    const latDiff = (bounds._northEast.lat - bounds._southWest.lat) * percentage;
+    const lngDiff = (bounds._northEast.lng - bounds._southWest.lng) * percentage;
+    
+    return L.latLngBounds(
+        [bounds._southWest.lat - latDiff, bounds._southWest.lng - lngDiff],
+        [bounds._northEast.lat + latDiff, bounds._northEast.lng + lngDiff]
+    );
 }
 
 // Fungsi untuk menghitung bounds dari GeoJSON
