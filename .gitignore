@@ -1,0 +1,49 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Environment variables & Configuration
+.env
+.env.local
+.env.*.local
+config.js  # Contains Firebase credentials - DO NOT commit
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Build outputs
+.next/
+out/
+build/
+
+# Vercel
+.vercel
+vercel.json
+
+# OS temp files
+*.tmp
+*.bak

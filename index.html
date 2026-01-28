@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Biopori Geo-Planner & Tracker - Jajarwayang</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="description" content="Aplikasi Web-GIS untuk mendata dan memetakan aset biopori di Desa Jajarwayang">
+    <meta name="theme-color" content="#2d6a4f">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Biopori GIS">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Icons -->
+    <link rel="icon" type="image/svg+xml" href="icons/icon-192x192.svg">
+    <link rel="apple-touch-icon" href="icons/icon-192x192.svg">
+    
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <!-- Firebase Realtime Database -->
+    <script type="module">
+        // Firebase SDK is loaded in script.js via import
+        console.log('[Init] Firebase will be loaded by firebaseService.js');
+    </script>
+    
+    <style>
+        /* ==========================================
+           Design System - Biopori GIS
+           Eco-Friendly Theme with Modern Typography
+           ========================================== */
+        :root {
+            /* ========== Typography ========== */
+            --font-main: 'Inter', system-ui, -apple-system, sans-serif;
+            
+            /* Font Sizes */
+            --text-heading: 18px;
+            --text-body: 14px;
+            --text-meta: 12px;
+            
+            /* ========== Primary Colors ========== */
+            --primary-forest: #2d6a4f;
+            --secondary-leaf: #52b788;
+            --accent-earth: #bc6c25;
+            
+            /* ========== Status Colors ========== */
+            --status-good: #74c69d;
+            --status-warning: #ffb703;
+            --status-danger: #e63946;
+            --status-water: #0077b6;
+            
+            /* ========== Background & UI ========== */
+            --bg-dark: #1b4332;
+            --bg-surface: #1f2937;
+            --bg-card: #374151;
+            --bg-light: #f8f9fa;
+            
+            /* ========== Text ========== */
+            --text-primary: #1b1b1b;
+            --text-secondary: #6c757d;
+            --text-light: #f8f9fa;
+            --text-muted: #9ca3af;
+            
+            /* ========== Border Radius (Eco-friendly, no sharp corners) ========== */
+            --radius-sm: 8px;      /* Input fields, Chips */
+            --radius-md: 16px;     /* Cards, Modals, Pop-ups */
+            --radius-pill: 50px;   /* Buttons, Search bars */
+            
+            /* ========== Spacing ========== */
+            --spacing-xs: 8px;
+            --spacing-sm: 12px;
+            --spacing-md: 16px;
+            --spacing-lg: 24px;
+            --spacing-mobile: 16px;
+            --spacing-desktop: 24px;
+            
+            /* ========== Shadows & Elevation ========== */
+            --shadow-soft: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-medium: 0 6px 12px -2px rgba(0, 0, 0, 0.15), 0 3px 7px -2px rgba(0, 0, 0, 0.1);
+            --shadow-high: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
+            
+            /* ========== Mobile Touch Target ========== */
+            --touch-target-min: 48px;
+            
+            /* Glass Effect */
+            --glass-effect: rgba(255, 255, 255, 0.7);
+        }
+        
+        /* ========== Base Styles ========== */
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        html, body { 
+            overscroll-behavior: none;
+            font-family: var(--font-main);
+            font-size: var(--text-body);
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        #map { height: 100vh; width: 100%; }
+        
+        /* ========== Typography Classes ========== */
+        .text-heading {
+            font-size: var(--text-heading);
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            line-height: 1.3;
+        }
+        .text-body {
+            font-size: var(--text-body);
+            font-weight: 400;
+            line-height: 1.5;
+        }
+        .text-meta {
+            font-family: var(--font-main);
+            font-size: var(--text-meta);
+            font-weight: 500;
+            letter-spacing: 0;
+        }
+        
+        /* ========== Legend Styles ========== */
+        .legend-item { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+        .legend-circle { width: 16px; height: 16px; border-radius: 50%; flex-shrink: 0; }
+        .legend-circle-dashed { border: 3px dashed; background: transparent; width: 16px; height: 16px; border-radius: 50%; }
+        
+        /* ========== Bottom Sheet Styles ========== */
+        .bottom-sheet {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--bg-dark);
+            border-radius: var(--radius-md) var(--radius-md) 0 0;
+            transform: translateY(calc(100% - 80px));
+            transition: transform 0.3s ease-out;
+            z-index: 1000;
+            max-height: 85vh;
+            overflow: hidden;
+        }
+        .bottom-sheet.expanded { transform: translateY(0); }
+        .bottom-sheet-handle {
+            width: 40px;
+            height: 5px;
+            background: var(--secondary-leaf);
+            border-radius: 3px;
+            margin: 12px auto;
+        }
+        .bottom-sheet-content {
+            max-height: calc(85vh - 80px);
+            overflow-y: auto;
+            padding: 0 20px 20px;
+        }
+        .bottom-sheet-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px 16px;
+        }
+        
+        /* ========== FAB Buttons ========== */
+        .fab-container {
+            position: fixed;
+            right: var(--spacing-md);
+            bottom: 100px;
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-sm);
+            z-index: 999;
+        }
+        .fab {
+            width: 56px;
+            height: 56px;
+            min-width: var(--touch-target-min);
+            min-height: var(--touch-target-min);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-main);
+            font-size: 24px;
+            font-weight: 600;
+            box-shadow: var(--shadow-high);
+            border: none;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
+        }
+        .fab:active { transform: scale(0.95); }
+        .fab:hover { 
+            filter: brightness(0.9); 
+            box-shadow: var(--shadow-high);
+        }
+        .fab-locate { 
+            background: var(--bg-light); 
+            color: var(--status-water); 
+            box-shadow: var(--shadow-medium);
+        }
+        .fab-eksisting { 
+            background: var(--primary-forest); 
+            color: white; 
+            border: 3px solid white;
+        }
+        .fab-potensial { 
+            background: var(--accent-earth); 
+            color: white; 
+            border: 3px solid white;
+        }
+        
+        /* ========== Quick Stats Bar (collapsed state) ========== */
+        .quick-stats {
+            display: flex;
+            justify-content: space-around;
+            padding: var(--spacing-xs) var(--spacing-md) 0;
+        }
+        .quick-stat {
+            text-align: center;
+        }
+        .quick-stat-value {
+            font-family: var(--font-main);
+            font-size: var(--text-heading);
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+        .quick-stat-label {
+            font-size: var(--text-meta);
+            color: var(--text-muted);
+        }
+        
+        /* Desktop Sidebar (hidden on mobile) */
+        .desktop-sidebar {
+            display: none;
+        }
+        
+        /* Larger touch targets for markers */
+        .leaflet-interactive { cursor: pointer; }
+        
+        /* ========== Install Banner ========== */
+        .install-banner {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(135deg, var(--primary-forest) 0%, var(--secondary-leaf) 100%);
+            color: white;
+            padding: var(--spacing-sm) var(--spacing-md);
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 1001;
+            box-shadow: var(--shadow-soft);
+            font-family: var(--font-main);
+        }
+        .install-banner.show { display: flex; }
+        .install-banner button {
+            background: white;
+            color: var(--primary-forest);
+            border: none;
+            padding: var(--spacing-xs) var(--spacing-md);
+            border-radius: var(--radius-pill);
+            font-family: var(--font-main);
+            font-weight: 600;
+            font-size: var(--text-body);
+            cursor: pointer;
+            min-height: var(--touch-target-min);
+            transition: background 0.2s;
+        }
+        .install-banner button:hover {
+            background: var(--bg-light);
+        }
+        .install-banner .close-btn {
+            background: transparent;
+            color: white;
+            padding: var(--spacing-xs);
+            font-size: 20px;
+            min-width: var(--touch-target-min);
+            min-height: var(--touch-target-min);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* ========== Delete Notification ========== */
+        .delete-notification {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: var(--primary-forest);
+            color: white;
+            padding: var(--spacing-sm) var(--spacing-md);
+            border-radius: var(--radius-pill);
+            box-shadow: var(--shadow-high);
+            z-index: 3000;
+            font-family: var(--font-main);
+            opacity: 0;
+            transition: all 0.3s ease;
+            max-width: 90%;
+        }
+        .delete-notification.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+        
+        /* ========== Offline indicator ========== */
+        .offline-indicator {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.85);
+            color: white;
+            padding: var(--spacing-md) var(--spacing-lg);
+            border-radius: var(--radius-md);
+            display: none;
+            z-index: 2000;
+            text-align: center;
+            font-family: var(--font-main);
+            box-shadow: var(--shadow-high);
+        }
+        .offline-indicator.show { display: block; }
+        
+        /* ========== Add Location Modal ========== */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            padding: var(--spacing-md);
+        }
+        .modal-overlay.show { display: flex; }
+        .modal-content {
+            background: var(--bg-dark);
+            border-radius: var(--radius-md);
+            width: 100%;
+            max-width: 400px;
+            max-height: 90vh;
+            overflow-y: auto;
+            color: white;
+            font-family: var(--font-main);
+            box-shadow: var(--shadow-high);
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--spacing-md) var(--spacing-lg);
+            border-bottom: 1px solid var(--secondary-leaf);
+        }
+        .modal-header h3 {
+            font-size: var(--text-heading);
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+        .modal-body { padding: var(--spacing-lg); }
+        .form-group { margin-bottom: var(--spacing-md); }
+        .form-label { 
+            display: block; 
+            font-size: var(--text-body); 
+            font-weight: 500; 
+            margin-bottom: 6px; 
+            color: var(--text-muted); 
+        }
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: var(--spacing-sm);
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--bg-card);
+            background: var(--bg-card);
+            color: white;
+            font-family: var(--font-main);
+            font-size: 16px; /* Prevents iOS zoom */
+            min-height: var(--touch-target-min);
+        }
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: var(--secondary-leaf);
+        }
+        .form-textarea { resize: vertical; min-height: 80px; }
+        .coord-display {
+            background: var(--bg-card);
+            padding: var(--spacing-sm);
+            border-radius: var(--radius-sm);
+            font-family: var(--font-main);
+            font-size: var(--text-meta);
+            color: var(--secondary-leaf);
+        }
+        /* ========== Buttons ========== */
+        .btn-primary {
+            width: 100%;
+            padding: var(--spacing-sm) var(--spacing-md);
+            background: var(--primary-forest);
+            color: white;
+            border: none;
+            border-radius: var(--radius-pill);
+            font-family: var(--font-main);
+            font-size: var(--text-body);
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            min-height: var(--touch-target-min);
+            box-shadow: var(--shadow-soft);
+        }
+        .btn-primary:hover { background: #245c43; }
+        .btn-primary:active { transform: scale(0.98); }
+        .btn-secondary {
+            width: 100%;
+            padding: var(--spacing-sm) var(--spacing-md);
+            background: transparent;
+            color: var(--text-muted);
+            border: 1px solid var(--bg-card);
+            border-radius: var(--radius-pill);
+            font-family: var(--font-main);
+            font-size: var(--text-body);
+            cursor: pointer;
+            margin-top: var(--spacing-xs);
+            min-height: var(--touch-target-min);
+            transition: background 0.2s, border-color 0.2s;
+        }
+        .btn-secondary:hover {
+            background: var(--bg-card);
+            border-color: var(--text-muted);
+        }
+        .btn-close {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            line-height: 1;
+            min-width: var(--touch-target-min);
+            min-height: var(--touch-target-min);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background 0.2s, color 0.2s;
+        }
+        .btn-close:hover { 
+            color: white; 
+            background: rgba(255,255,255,0.1);
+        }
+        
+        /* ========== FAB Add Button ========== */
+        .fab-add {
+            background: var(--accent-earth);
+            color: white;
+            font-size: 28px;
+            font-weight: 700;
+            box-shadow: var(--shadow-high);
+        }
+        .fab-add:hover { background: #a35b1f; }
+        
+        /* ========== Mode indicator ========== */
+        .add-mode-indicator {
+            position: fixed;
+            top: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--accent-earth);
+            color: white;
+            padding: var(--spacing-sm) var(--spacing-lg);
+            border-radius: var(--radius-pill);
+            font-family: var(--font-main);
+            font-size: var(--text-body);
+            font-weight: 500;
+            display: none;
+            z-index: 1001;
+            box-shadow: var(--shadow-high);
+        }
+        .add-mode-indicator.show { display: block; }
+        
+        /* ========== Desktop styles ========== */
+        @media (min-width: 768px) {
+            .desktop-sidebar {
+                display: flex;
+                flex-direction: column;
+                width: 320px;
+                background: var(--bg-dark);
+                color: white;
+                padding: var(--spacing-desktop);
+                overflow-y: auto;
+                flex-shrink: 0;
+                font-family: var(--font-main);
+            }
+            .bottom-sheet { display: none; }
+            .fab-container { display: none; }
+            #map { height: 100vh; }
+            .main-container { display: flex; height: 100vh; }
+            
+            /* Desktop buttons - keep 48px but allow normal appearance */
+            .desktop-sidebar button {
+                min-height: 44px;
+            }
+        }
+        
+        /* ========== Utility Classes ========== */
+        .card {
+            background: var(--bg-card);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-md);
+            box-shadow: var(--shadow-soft);
+        }
+        .card-sm {
+            background: var(--bg-card);
+            border-radius: var(--radius-sm);
+            padding: var(--spacing-sm);
+        }
+    </style>
+</head>
+<body class="m-0 p-0 bg-gray-900" style="font-family: var(--font-main);">
+    <!-- Install Banner -->
+    <div id="install-banner" class="install-banner">
+        <span>Install aplikasi untuk akses cepat</span>
+        <div>
+            <button id="btn-install">Install</button>
+            <button class="close-btn" id="btn-close-banner">✕</button>
+        </div>
+    </div>
+    
+    <!-- Offline Indicator -->
+    <div id="offline-indicator" class="offline-indicator">
+        <div style="font-size: 48px; margin-bottom: 8px;">⊘</div>
+        <div>Anda sedang offline</div>
+        <div style="font-size: 12px; color: #9ca3af; margin-top: 4px;">Data dari cache akan ditampilkan</div>
+    </div>
+    
+    <!-- Add Mode Indicator -->
+    <div id="add-mode-indicator" class="add-mode-indicator">
+        Tap on map to select location
+    </div>
+    
+    <!-- Add Location Modal -->
+    <div id="add-location-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="text-heading font-bold">Tambah Lokasi Biopori</h3>
+                <button id="btn-close-modal" class="btn-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="add-location-form">
+                    <!-- Coordinates Input -->
+                    <div class="form-group">
+                        <label class="form-label">Koordinat</label>
+                        <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                            <div style="flex: 1;">
+                                <label class="form-label" style="font-size: 12px; margin-bottom: 4px;">Latitude</label>
+                                <input type="text" id="input-lat" name="lat" class="form-input" placeholder="Contoh: -6.951" required>
+                            </div>
+                            <div style="flex: 1;">
+                                <label class="form-label" style="font-size: 12px; margin-bottom: 4px;">Longitude</label>
+                                <input type="text" id="input-lng" name="lng" class="form-input" placeholder="Contoh: 109.618" required>
+                            </div>
+                        </div>
+                        <div class="coord-display" style="background: var(--bg-card); padding: 8px 12px; border-radius: 6px; text-align: center; font-size: 12px; color: var(--text-muted);">
+                            Atau klik tombol di bawah untuk pilih dari map
+                        </div>
+                        <button type="button" id="btn-select-from-map" class="btn-secondary" style="margin-top: 8px;">📍 Pilih dari Map</button>
+                    </div>
+                    
+                    <!-- Kategori -->
+                    <div class="form-group">
+                        <label class="form-label">Kategori</label>
+                        <select id="input-kategori" name="kategori" class="form-select" required>
+                            <option value="">Pilih kategori...</option>
+                            <option value="Eksisting">Eksisting (Sudah Terpasang)</option>
+                            <option value="Potensial">Potensial (Rencana)</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Status - Dynamic based on kategori -->
+                    <div class="form-group" id="status-group">
+                        <label class="form-label">Status</label>
+                        <select id="input-status" name="status" class="form-select" required disabled>
+                            <option value="">Pilih kategori dulu...</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Lokasi Detail -->
+                    <div class="form-group">
+                        <label class="form-label">Detail Lokasi</label>
+                        <input type="text" id="input-lokasi" name="lokasi_detail" class="form-input" placeholder="Contoh: RT 01/RW 02, Depan rumah Pak..." required>
+                    </div>
+                    
+                    <!-- Tanggal (only for Eksisting) -->
+                    <div class="form-group" id="tanggal-group" style="display: none;">
+                        <label class="form-label">Tanggal Pemasangan</label>
+                        <input type="date" id="input-tanggal" name="tanggal_pasang" class="form-input">
+                    </div>
+                    
+                    <!-- Keterangan -->
+                    <div class="form-group">
+                        <label class="form-label">Keterangan</label>
+                        <textarea id="input-keterangan" name="keterangan" class="form-textarea" placeholder="Tambahkan catatan..."></textarea>
+                    </div>
+                    
+                    <!-- Submit Button -->
+                    <button type="submit" class="btn-primary">Simpan Lokasi</button>
+                    <button type="button" id="btn-cancel-form" class="btn-secondary">Batal</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit/Update Kondisi Modal -->
+    <div id="edit-location-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="text-heading font-bold">Update Kondisi Biopori</h3>
+                <button id="btn-edit-close-modal" class="btn-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="edit-location-form">
+                    <!-- Location ID (display only) -->
+                    <div class="form-group">
+                        <label class="form-label">ID Biopori</label>
+                        <div id="edit-location-id" class="form-input" style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 10px; border-radius: 6px; font-weight: bold; color: var(--status-good);">-</div>
+                    </div>
+
+                    <!-- Kategori -->
+                    <div class="form-group">
+                        <label class="form-label">Kategori</label>
+                        <select id="edit-input-kategori" name="kategori" class="form-select" required>
+                            <option value="">Pilih kategori...</option>
+                            <option value="Eksisting">Eksisting (Sudah Terpasang)</option>
+                            <option value="Potensial">Potensial (Rencana)</option>
+                        </select>
+                    </div>
+
+                    <!-- Status - Dynamic based on kategori -->
+                    <div class="form-group" id="edit-status-group">
+                        <label class="form-label">Status/Kondisi</label>
+                        <select id="edit-input-status" name="status" class="form-select" required disabled>
+                            <option value="">Pilih kategori dulu...</option>
+                        </select>
+                    </div>
+
+                    <!-- Tanggal (only for Eksisting) -->
+                    <div class="form-group" id="edit-tanggal-group" style="display: none;">
+                        <label class="form-label">Tanggal Pemasangan</label>
+                        <input type="date" id="edit-input-tanggal" name="tanggal_pasang" class="form-input">
+                    </div>
+
+                    <!-- Lokasi Detail -->
+                    <div class="form-group">
+                        <label class="form-label">Detail Lokasi</label>
+                        <input type="text" id="edit-input-lokasi" name="lokasi_detail" class="form-input" required>
+                    </div>
+
+                    <!-- Keterangan -->
+                    <div class="form-group">
+                        <label class="form-label">Keterangan</label>
+                        <textarea id="edit-input-keterangan" name="keterangan" class="form-textarea" placeholder="Tambahkan catatan..."></textarea>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" class="btn-primary">Simpan Perubahan</button>
+                    <button type="button" id="btn-edit-cancel-form" class="btn-secondary">Batal</button>
+                    <button type="button" id="btn-edit-delete" class="btn-danger" style="background-color: #ef4444; margin-top: 8px; width: 100%;">🗑️ Hapus Lokasi</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <!-- Desktop Sidebar -->
+        <aside class="desktop-sidebar">
+            <h1 class="font-bold mb-2" style="font-size: 20px;">Biopori Geo-Planner</h1>
+            <p class="text-meta mb-6" style="color: var(--text-muted);">Desa Jajarwayang</p>
+            
+            <!-- Statistik -->
+            <div class="mb-6">
+                <h2 class="text-heading mb-3 border-b border-gray-600 pb-2">Statistik</h2>
+                <div class="card-sm mb-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-body" style="color: var(--text-muted);">Biopori Aktif</span>
+                        <span id="desktop-count-eksisting" class="text-heading" style="color: var(--status-good);">0</span>
+                    </div>
+                </div>
+                <div class="card-sm mb-3">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-body" style="color: var(--text-muted);">Rencana Pemasangan</span>
+                        <span id="desktop-count-potensial" class="text-heading" style="color: var(--accent-earth);">0</span>
+                    </div>
+                    <div class="text-meta" style="color: var(--text-muted);">
+                        <span style="color: var(--accent-earth);">●</span> Prioritas Tinggi: <span id="desktop-count-prioritas-tinggi">0</span> | 
+                        <span style="color: var(--status-warning);">●</span> Sedang: <span id="desktop-count-prioritas-sedang">0</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Filter Toggle -->
+            <div class="mb-6">
+                <h2 class="text-heading mb-3 border-b border-gray-600 pb-2">Filter</h2>
+                <label class="flex items-center gap-3 cursor-pointer mb-2 p-2 rounded-lg hover:bg-gray-700 transition-colors" style="min-height: var(--touch-target-min);">
+                    <input type="checkbox" id="desktop-toggle-eksisting" checked class="w-5 h-5" style="accent-color: var(--status-good);">
+                    <span class="text-body">Tampilkan Eksisting</span>
+                </label>
+                <label class="flex items-center gap-3 cursor-pointer p-2 rounded-lg hover:bg-gray-700 transition-colors" style="min-height: var(--touch-target-min);">
+                    <input type="checkbox" id="desktop-toggle-potensial" checked class="w-5 h-5" style="accent-color: var(--accent-earth);">
+                    <span class="text-body">Tampilkan Potensial</span>
+                </label>
+            </div>
+            
+            <!-- Legend -->
+            <div class="mb-6">
+                <h2 class="text-heading mb-3 border-b border-gray-600 pb-2">Keterangan</h2>
+                <div class="legend-item">
+                    <div class="legend-circle" style="background-color: var(--status-good);"></div>
+                    <span class="text-body">Eksisting - Aktif</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-circle-dashed" style="border-color: var(--accent-earth);"></div>
+                    <span class="text-body">Potensial - Prioritas Tinggi</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-circle-dashed" style="border-color: var(--status-warning);"></div>
+                    <span class="text-body">Potensial - Prioritas Sedang</span>
+                </div>
+            </div>
+            
+            <!-- Authentication Section -->
+            <div class="mb-6 pb-6 border-b border-gray-600">
+                <h2 class="text-heading mb-3">Akun</h2>
+                <div id="auth-container">
+                    <!-- Login State -->
+                    <div id="auth-login-view">
+                        <button id="btn-login" onclick="window.handleLogin && window.handleLogin()" class="w-full text-white py-3 px-4 font-semibold transition-all flex items-center justify-center gap-2 mb-2 rounded-full hover:brightness-90 active:scale-98" style="background-color: var(--primary-forest); box-shadow: var(--shadow-soft);">
+                            🔐 Login dengan Google
+                        </button>
+                        <p class="text-meta text-gray-400 text-center">Login untuk menambah/edit data</p>
+                    </div>
+                    
+                    <!-- Logged In State -->
+                    <div id="auth-loggedin-view" style="display: none;">
+                        <div class="card-sm mb-3">
+                            <div class="text-meta mb-1" style="color: var(--text-muted);">Akun: </div>
+                            <div id="user-email" class="text-body font-semibold" style="color: var(--status-good); word-break: break-word;">-</div>
+                        </div>
+                        <button id="btn-logout" onclick="window.handleLogout && window.handleLogout()" class="w-full text-gray-900 py-2 px-4 font-semibold transition-all rounded-full hover:brightness-90 active:scale-98" style="background-color: #9ca3af;">
+                            Logout
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Find My Location Button -->
+            <button id="desktop-btn-locate" class="w-full text-white py-3 px-4 font-semibold transition-all flex items-center justify-center gap-2 mb-3 hover:brightness-90 active:scale-98" style="background-color: var(--status-water); border-radius: var(--radius-pill); box-shadow: var(--shadow-soft);">
+                Temukan Lokasi Saya
+            </button>
+            
+            <!-- Add Location Button -->
+            <button id="desktop-btn-add" data-edit-only class="w-full text-white py-3 px-4 font-semibold transition-all flex items-center justify-center gap-2 hover:brightness-90 active:scale-98" style="background-color: var(--accent-earth); border-radius: var(--radius-pill); box-shadow: var(--shadow-soft);" disabled>
+                Tambah Lokasi Biopori
+            </button>
+        </aside>
+        
+        <!-- Map Container -->
+        <main class="flex-1 relative">
+            <div id="map"></div>
+        </main>
+    </div>
+    
+    <!-- Mobile FAB Buttons -->
+    <div class="fab-container">
+        <button id="fab-add" data-edit-only class="fab fab-add" title="Tambah Lokasi" disabled>+</button>
+        <button id="fab-locate" class="fab fab-locate" title="Lokasi Saya">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3c-.46-4.17-3.77-7.48-7.94-7.94V1h-2v2.06C6.83 3.52 3.52 6.83 3.06 11H1v2h2.06c.46 4.17 3.77 7.48 7.94 7.94V23h2v-2.06c4.17-.46 7.48-3.77 7.94-7.94H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/>
+            </svg>
+        </button>
+        <button id="fab-filter-eksisting" class="fab fab-eksisting" title="Toggle Eksisting">E</button>
+        <button id="fab-filter-potensial" class="fab fab-potensial" title="Toggle Potensial">P</button>
+    </div>
+    
+    <!-- Mobile Bottom Sheet -->
+    <div id="bottom-sheet" class="bottom-sheet text-white">
+        <div class="bottom-sheet-handle" id="sheet-handle"></div>
+        
+        <!-- Quick Stats (visible when collapsed) -->
+        <div class="quick-stats" id="quick-stats">
+            <div class="quick-stat">
+                <div class="quick-stat-value" id="mobile-count-eksisting" style="color: var(--status-good);">0</div>
+                <div class="quick-stat-label">Terpasang</div>
+            </div>
+            <div class="quick-stat">
+                <div class="quick-stat-value" id="mobile-count-potensial" style="color: var(--accent-earth);">0</div>
+                <div class="quick-stat-label">Rencana</div>
+            </div>
+        </div>
+        
+        <!-- Full Content (visible when expanded) -->
+        <div class="bottom-sheet-content">
+            <div class="bottom-sheet-header">
+                <h2 class="text-heading font-bold">Biopori Geo-Planner</h2>
+                <span class="text-meta" style="color: var(--text-muted);">Desa Jajarwayang</span>
+            </div>
+            
+            <!-- Detail Stats -->
+            <div class="mb-4">
+                <h3 class="text-meta font-semibold mb-2" style="color: var(--text-muted);">Detail Statistik</h3>
+                <div class="card-sm mb-2">
+                    <div class="flex justify-between items-center">
+                        <span class="text-body" style="color: var(--text-muted);">Biopori Aktif</span>
+                        <span id="sheet-count-eksisting" class="text-heading" style="color: var(--status-good);">0</span>
+                    </div>
+                </div>
+                <div class="card-sm">
+                    <div class="flex justify-between items-center">
+                        <span class="text-body" style="color: var(--text-muted);">Rencana Pemasangan</span>
+                        <span id="sheet-count-potensial" class="text-heading" style="color: var(--accent-earth);">0</span>
+                    </div>
+                    <div class="text-meta mt-1" style="color: var(--text-muted);">
+                        <span style="color: var(--accent-earth);">●</span> Prioritas Tinggi: <span id="sheet-count-prioritas-tinggi">0</span> | 
+                        <span style="color: var(--status-warning);">●</span> Sedang: <span id="sheet-count-prioritas-sedang">0</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Legend -->
+            <div class="mb-4">
+                <h3 class="text-meta font-semibold mb-2" style="color: var(--text-muted);">Keterangan</h3>
+                <div class="grid grid-cols-2 gap-2 text-body">
+                    <div class="legend-item">
+                        <div class="legend-circle" style="background-color: var(--status-good);"></div>
+                        <span>Aktif</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-circle-dashed" style="border-color: var(--accent-earth);"></div>
+                        <span>Prioritas Tinggi</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-circle-dashed" style="border-color: var(--status-warning);"></div>
+                        <span>Prioritas Sedang</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Filter Toggles -->
+            <div class="mb-4">
+                <h3 class="text-meta font-semibold mb-2" style="color: var(--text-muted);">Filter Layer</h3>
+                <div class="flex gap-3">
+                    <label class="flex-1 flex items-center gap-2 p-3 cursor-pointer card-sm" style="min-height: var(--touch-target-min);">
+                        <input type="checkbox" id="mobile-toggle-eksisting" checked class="w-5 h-5" style="accent-color: var(--status-good);">
+                        <span class="text-body">Eksisting</span>
+                    </label>
+                    <label class="flex-1 flex items-center gap-2 p-3 cursor-pointer card-sm" style="min-height: var(--touch-target-min);">
+                        <input type="checkbox" id="mobile-toggle-potensial" checked class="w-5 h-5" style="accent-color: var(--accent-earth);">
+                        <span class="text-body">Potensial</span>
+                    </label>
+                </div>
+            </div>
+            
+            <!-- Mobile Authentication Section -->
+            <div class="border-t border-gray-600 pt-4">
+                <h3 class="text-meta font-semibold mb-2" style="color: var(--text-muted);">Akun</h3>
+                <div id="mobile-auth-container">
+                    <!-- Login State -->
+                    <div id="mobile-auth-login-view">
+                        <button id="mobile-btn-login" onclick="window.handleLogin && window.handleLogin()" class="w-full text-white py-3 px-4 font-semibold transition-all rounded-full mb-2 hover:brightness-90 active:scale-98" style="background-color: var(--primary-forest); box-shadow: var(--shadow-soft);">
+                            🔐 Login dengan Google
+                        </button>
+                        <p class="text-meta text-gray-400">Login untuk menambah/edit data</p>
+                    </div>
+                    
+                    <!-- Logged In State -->
+                    <div id="mobile-auth-loggedin-view" style="display: none;">
+                        <div class="card-sm mb-3">
+                            <div class="text-meta mb-1" style="color: var(--text-muted);">Akun: </div>
+                            <div id="mobile-user-email" class="text-body font-semibold" style="color: var(--status-good); word-break: break-word;">-</div>
+                        </div>
+                        <button id="mobile-btn-logout" onclick="window.handleLogout && window.handleLogout()" class="w-full text-gray-900 py-2 px-4 font-semibold transition-all rounded-full hover:brightness-90 active:scale-98" style="background-color: #9ca3af;">
+                            Logout
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- Turf.js for geospatial analysis -->
+    <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
+    
+    <!-- Dev Mode: Unregister Service Worker -->
+    <script>
+        // DEVELOPMENT MODE: Unregister all service workers
+        const DEV_MODE = true; // Set to false for production
+        
+        if (DEV_MODE && 'serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(registrations => {
+                registrations.forEach(registration => {
+                    registration.unregister();
+                    console.log('🧹 Service Worker unregistered for dev mode');
+                });
+            });
+            // Also clear caches
+            if ('caches' in window) {
+                caches.keys().then(names => {
+                    names.forEach(name => caches.delete(name));
+                    console.log('🧹 Caches cleared for dev mode');
+                });
+            }
+        }
+        
+        // Manual unregister via URL param ?unregister=1
+        if (new URLSearchParams(location.search).get('unregister')) {
+            navigator.serviceWorker.getRegistrations().then(regs => {
+                regs.forEach(r => r.unregister());
+                alert('Service Worker unregistered! Refreshing...');
+                location.href = location.pathname;
+            });
+        }
+    </script>
+    
+    <!-- Main Script -->
+    <script type="module" src="script.js"></script>
+</body>
+</html>
