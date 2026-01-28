@@ -24,12 +24,19 @@ import {
     onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-// Load Firebase config from environment variables (Vercel/Production) or import from file (Development)
+// Load Firebase config from multiple sources
 let firebaseConfig;
 
-// Try environment variables first (Vercel production)
-if (import.meta.env.VITE_FIREBASE_API_KEY) {
-    console.log('[Firebase] Loading config from environment variables (production)');
+console.log('[Firebase Init] Checking for config...');
+
+// Priority 1: Global config from HTML (set via import.meta.env)
+if (window.__bioporiConfig?.firebase?.apiKey) {
+    console.log('[Firebase] Using config from window.__bioporiConfig');
+    firebaseConfig = window.__bioporiConfig.firebase;
+}
+// Priority 2: Environment variables (Vercel)
+else if (typeof import.meta !== 'undefined' && import.meta.env?.VITE_FIREBASE_API_KEY) {
+    console.log('[Firebase] Using config from import.meta.env');
     firebaseConfig = {
         apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
         authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
@@ -39,21 +46,25 @@ if (import.meta.env.VITE_FIREBASE_API_KEY) {
         messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
         appId: import.meta.env.VITE_FIREBASE_APP_ID
     };
-} else {
-    // Try development file
+}
+// Priority 3: Local config files (development)
+else {
+    console.log('[Firebase] Attempting to load from config.js.local or config.js...');
     try {
-        console.log('[Firebase] Loading config from config.js.local (development)');
-        const config = await import("./config.js.local");
-        firebaseConfig = config.default;
-    } catch (e) {
+        const configModule = await import("./config.js.local");
+        firebaseConfig = configModule.default;
+        console.log('[Firebase] Loaded from config.js.local');
+    } catch (e1) {
         try {
-            const config = await import("./config.js");
-            firebaseConfig = config.default;
+            const configModule = await import("./config.js");
+            firebaseConfig = configModule.default;
+            console.log('[Firebase] Loaded from config.js');
         } catch (e2) {
-            console.error('[Firebase] Config not found!');
-            console.error('[Firebase] For development: create config.js.local with your Firebase credentials');
-            console.error('[Firebase] For Vercel: add environment variables: VITE_FIREBASE_API_KEY, VITE_FIREBASE_AUTH_DOMAIN, etc.');
-            throw new Error('Firebase configuration not found. See console for details.');
+            console.error('[Firebase] CRITICAL: No config found!', {
+                error1: e1.message,
+                error2: e2.message
+            });
+            throw new Error('Firebase config not found. Check console for details.');
         }
     }
 }

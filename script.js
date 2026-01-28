@@ -7,30 +7,38 @@
 // Import Firebase Service & Config
 import FirebaseService from './firebaseService.js';
 
-// Get OWNER_EMAIL from environment or fallback to config file
+// Get OWNER_EMAIL dari berbagai source
 let OWNER_EMAIL;
 
-// Try environment variable first (Vercel production)
-if (import.meta.env.VITE_OWNER_EMAIL) {
+// Priority 1: Global config (from HTML)
+if (window.__bioporiConfig?.ownerEmail) {
+    OWNER_EMAIL = window.__bioporiConfig.ownerEmail;
+    console.log('[Config] OWNER_EMAIL from window.__bioporiConfig');
+}
+// Priority 2: Environment variables
+else if (import.meta?.env?.VITE_OWNER_EMAIL) {
     OWNER_EMAIL = import.meta.env.VITE_OWNER_EMAIL;
-    console.log('[Config] OWNER_EMAIL loaded from environment variables');
-} else {
-    // Try development file
+    console.log('[Config] OWNER_EMAIL from import.meta.env');
+}
+// Priority 3: Local config files
+else {
     try {
         const config = await import('./config.js.local');
         OWNER_EMAIL = config.OWNER_EMAIL;
-        console.log('[Config] OWNER_EMAIL loaded from config.js.local');
+        console.log('[Config] OWNER_EMAIL from config.js.local');
     } catch (e) {
         try {
             const config = await import('./config.js');
             OWNER_EMAIL = config.OWNER_EMAIL;
-            console.log('[Config] OWNER_EMAIL loaded from config.js');
+            console.log('[Config] OWNER_EMAIL from config.js');
         } catch (e2) {
-            console.error('[Config] OWNER_EMAIL not found!');
+            console.warn('[Config] OWNER_EMAIL not found - readonly mode');
             OWNER_EMAIL = null;
         }
     }
 }
+
+console.log('[Config] OWNER_EMAIL:', OWNER_EMAIL || 'not set');
 
 // Expose to global scope for console and onclick handlers
 window.FirebaseService = FirebaseService;
