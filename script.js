@@ -43,7 +43,11 @@ window.FirebaseService = FirebaseService;
 let currentUser = null;
 let isOwner = false;
 
-// Setup auth listener on page load
+// Load initial data on page load (PUBLIC mode - everyone can see markers)
+console.log('[Init] Loading initial biopori data for public view...');
+await loadData();
+
+// Setup auth listener for login/logout
 FirebaseService.onAuthStateChange(async (user) => {
     currentUser = user;
     isOwner = user && user.email === OWNER_EMAIL;
@@ -53,13 +57,10 @@ FirebaseService.onAuthStateChange(async (user) => {
     
     updateAuthUI();
     
-    // If logged in, load data
+    // If logged in, setup real-time listener for live updates
     if (user) {
-        await loadData();
+        console.log('[Auth] Setting up real-time listener for logged-in user');
         setupFirebaseListener();
-    } else {
-        // Show readonly view if not logged in
-        renderMarkers();
     }
 });
 
@@ -79,15 +80,15 @@ function updateAuthUI() {
     const editButtons = document.querySelectorAll('[data-edit-only]');
     
     if (currentUser && isOwner) {
-        // Show logged-in state (owner)
+        // Show logged-in state (owner) - FULL ACCESS
         if (desktopLoginView) desktopLoginView.style.display = 'none';
         if (desktopLoggedInView) desktopLoggedInView.style.display = 'block';
-        if (desktopUserEmail) desktopUserEmail.textContent = currentUser.email;
+        if (desktopUserEmail) desktopUserEmail.textContent = currentUser.email + ' (Admin)';
         if (desktopBtn) desktopBtn.disabled = false;
         
         if (mobileLoginView) mobileLoginView.style.display = 'none';
         if (mobileLoggedInView) mobileLoggedInView.style.display = 'block';
-        if (mobileUserEmail) mobileUserEmail.textContent = currentUser.email;
+        if (mobileUserEmail) mobileUserEmail.textContent = currentUser.email + ' (Admin)';
         if (mobileBtn) mobileBtn.disabled = false;
         
         // Enable all edit buttons
@@ -99,12 +100,12 @@ function updateAuthUI() {
         // Logged in but not owner (readonly)
         if (desktopLoginView) desktopLoginView.style.display = 'none';
         if (desktopLoggedInView) desktopLoggedInView.style.display = 'block';
-        if (desktopUserEmail) desktopUserEmail.textContent = currentUser.email + ' (Readonly)';
+        if (desktopUserEmail) desktopUserEmail.textContent = currentUser.email + ' (Viewer)';
         if (desktopBtn) desktopBtn.disabled = true;
         
         if (mobileLoginView) mobileLoginView.style.display = 'none';
         if (mobileLoggedInView) mobileLoggedInView.style.display = 'block';
-        if (mobileUserEmail) mobileUserEmail.textContent = currentUser.email + ' (Readonly)';
+        if (mobileUserEmail) mobileUserEmail.textContent = currentUser.email + ' (Viewer)';
         if (mobileBtn) mobileBtn.disabled = true;
         
         // Disable all edit buttons
@@ -113,7 +114,7 @@ function updateAuthUI() {
             btn.style.opacity = '0.5';
         });
     } else {
-        // Not logged in
+        // Not logged in (PUBLIC mode - can view all markers, but cannot edit)
         if (desktopLoginView) desktopLoginView.style.display = 'block';
         if (desktopLoggedInView) desktopLoggedInView.style.display = 'none';
         if (desktopBtn) desktopBtn.disabled = true;
@@ -127,6 +128,8 @@ function updateAuthUI() {
             btn.disabled = true;
             btn.style.opacity = '0.5';
         });
+        
+        console.log('[Auth] PUBLIC mode - showing all markers without login');
     }
 }
 
