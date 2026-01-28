@@ -6,7 +6,22 @@
 
 // Import Firebase Service & Config
 import FirebaseService from './firebaseService.js';
-import { OWNER_EMAIL } from './config.js';
+
+// Try to import from config.js.local (development) or fall back to config.js
+let OWNER_EMAIL;
+try {
+    const config = await import('./config.js.local');
+    OWNER_EMAIL = config.OWNER_EMAIL;
+} catch (e) {
+    try {
+        const config = await import('./config.js');
+        OWNER_EMAIL = config.OWNER_EMAIL;
+    } catch (e2) {
+        console.error('[Config] Neither config.js nor config.js.local found!');
+        console.error('[Config] Please copy .env.example to config.js.local and fill in your Firebase credentials');
+        OWNER_EMAIL = null;
+    }
+}
 
 // Expose to global scope for console and onclick handlers
 window.FirebaseService = FirebaseService;

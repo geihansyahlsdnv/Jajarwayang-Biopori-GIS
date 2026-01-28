@@ -12,11 +12,12 @@ build/
 *.sqlite
 *.sqlite3
 
-# Environment variables & Configuration
+# Environment variables & Configuration (LOCAL ONLY)
 .env
 .env.local
 .env.*.local
-config.js  # Contains Firebase credentials - DO NOT commit
+config.js           # Template - use config.js.local for development
+config.js.local     # Firebase credentials - DO NOT commit
 
 # IDEs
 .vscode/
@@ -39,6 +40,7 @@ yarn-error.log
 .next/
 out/
 build/
+dist/
 
 # Vercel
 .vercel
@@ -47,3 +49,7 @@ vercel.json
 # OS temp files
 *.tmp
 *.bak
+
+# Logs
+*.log
+

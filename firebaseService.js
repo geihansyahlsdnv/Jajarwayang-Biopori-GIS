@@ -23,7 +23,22 @@ import {
     signOut,
     onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import firebaseConfig from "./config.js";
+
+// Try to import config from development file first
+let firebaseConfig;
+try {
+    const config = await import("./config.js.local");
+    firebaseConfig = config.default;
+} catch (e) {
+    try {
+        const config = await import("./config.js");
+        firebaseConfig = config.default;
+    } catch (e2) {
+        console.error('[Firebase] Config file not found!');
+        console.error('[Firebase] Please create config.js.local with your Firebase credentials');
+        throw new Error('Firebase configuration not found. Copy .env.example to config.js.local');
+    }
+}
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);

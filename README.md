@@ -63,23 +63,50 @@ Untuk dokumentasi lengkap setup authentication, lihat [AUTH_SETUP.md](AUTH_SETUP
 
 ---
 
+## 🚀 Quick Start untuk Contributors
+
 ### 1. Clone Repository
 ```bash
-git clone https://github.com/YOUR_USERNAME/biopori-gis.git
-cd biopori-gis
+git clone https://github.com/geihansyahlsdnv/Jajarwayang-Biopori-GIS.git
+cd Jajarwayang-Biopori-GIS
 ```
 
-### 2. Setup Firebase
+### 2. Setup Firebase Credentials ⚠️
 
-#### A. Create Firebase Project
+**PENTING:** Aplikasi memerlukan Firebase credentials untuk berfungsi.
+
+#### Option A: Using `.env.local` (Development)
+```bash
+# Copy template
+cp .env.example config.js.local
+
+# Edit dengan credentials Firebase Anda
+nano config.js.local
+# atau buka dengan text editor favorit
+```
+
+Edit `config.js.local`:
+```javascript
+const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_AUTH_DOMAIN",
+    databaseURL: "YOUR_DATABASE_URL",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_STORAGE_BUCKET",
+    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+    appId: "YOUR_APP_ID"
+};
+
+const OWNER_EMAIL = 'your-email@gmail.com';
+
+export { firebaseConfig as default, OWNER_EMAIL };
+```
+
+#### Option B: Menggunakan Firebase Project Anda Sendiri
 1. Go to [firebase.google.com](https://firebase.google.com)
-2. Click "Go to console"
-3. Create a new project (name: `biopori-gis`)
-4. Enable Realtime Database (Create database di region `asia-southeast1`)
-
-#### B. Setup Security Rules
-Di Firebase Console > Realtime Database > Rules, replace dengan:
-
+2. Create a new project (name: `biopori-gis`)
+3. Enable Realtime Database (region: `asia-southeast1`)
+4. Setup Security Rules:
 ```json
 {
   "rules": {
@@ -90,58 +117,56 @@ Di Firebase Console > Realtime Database > Rules, replace dengan:
   }
 }
 ```
+5. Copy credentials dari Project Settings → Your apps → Web
+6. Paste ke `config.js.local`
 
-⚠️ **For production:** Implement authentication + proper security rules
+**⚠️ SECURITY:** File `config.js.local` tidak akan di-push (ada di `.gitignore`)
 
-#### C. Get Firebase Credentials
-1. Go to Project Settings > Service Accounts
-2. Copy credentials (apiKey, projectId, databaseURL, etc.)
-3. Create `.env` file di root project:
+### 3. Run Locally
 
 ```bash
-cp .env.example .env
-```
-
-Edit `.env`:
-```
-VITE_FIREBASE_API_KEY=your_api_key_here
-VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=your_project_id
-VITE_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
-VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
-VITE_FIREBASE_APP_ID=your_app_id
-```
-
-### 3. Local Development
-```bash
-# Option A: Simple HTTP Server
+# Python built-in server
 python3 -m http.server 8080
 
-# Option B: VS Code Live Server extension
-# Right-click index.html > Open with Live Server
-
-# Open http://localhost:8080
+# Atau gunakan Live Server (VS Code)
+# Right-click index.html → Open with Live Server
 ```
 
-### 4. Deploy to Vercel
+Open: **http://localhost:8080** 🗺️
 
-#### Via GitHub (Recommended)
-1. Push ke GitHub:
+### 4. Development Workflow
+
 ```bash
+# 1. Buat branch untuk fitur baru
+git checkout -b feature/nama-fitur
+
+# 2. Commit changes
 git add .
-git commit -m "Initial commit"
-git push origin main
+git commit -m "Add: deskripsi perubahan"
+
+# 3. Push ke GitHub
+git push origin feature/nama-fitur
+
+# 4. Buat Pull Request di GitHub
 ```
 
-2. Go to [vercel.com](https://vercel.com)
-3. Import GitHub repository
-4. Add environment variables dari `.env`
-5. Deploy! ✅
+### 5. Deploy ke Vercel
 
-#### Via CLI
 ```bash
+# Install Vercel CLI
 npm i -g vercel
+
+# Login dan deploy
 vercel
+
+# Atau: Setup via GitHub integration di vercel.com
+```
+
+**Environment Variables di Vercel:**
+```
+VITE_FIREBASE_API_KEY=your_api_key
+VITE_FIREBASE_AUTH_DOMAIN=your_auth_domain
+... (semua Firebase config)
 ```
 
 ---
