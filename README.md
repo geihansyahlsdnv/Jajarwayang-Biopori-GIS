@@ -1,4 +1,4 @@
-# Biopori Geo-Planner & Tracker - Jajarwayang
+# Biopori Geo-Planner & Tracker - Jajarwayang - BETA
 
 Progressive Web App (PWA) untuk mendata aset biopori (lubang resapan air) di Desa Jajarwayang, Kecamatan Bojong, Kabupaten Pekalongan, Jawa Tengah.
 
