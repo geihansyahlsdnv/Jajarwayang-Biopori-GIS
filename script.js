@@ -461,9 +461,9 @@ function createPopupContent(item) {
     if (kategori === 'eksisting') {
         return `
             <div class="p-2 min-w-[200px]">
-                <h3 class="font-bold text-lg mb-2 text-green-700">🌿 ${item.id}</h3>
+                <h3 class="font-bold text-lg mb-2 text-green-700">🌿 ${item.nama || item.id}</h3>
                 <table class="text-sm w-full">
-                    ${item.nama ? `<tr><td class="font-semibold pr-2">Nama:</td><td><strong>${item.nama}</strong></td></tr>` : ''}
+                    <tr><td class="font-semibold pr-2">ID:</td><td><span class="text-xs text-gray-500">${item.id}</span></td></tr>
                     <tr><td class="font-semibold pr-2">Kategori:</td><td>${item.kategori}</td></tr>
                     <tr><td class="font-semibold pr-2">Status:</td><td><span class="px-2 py-1 rounded text-white text-xs" style="background-color: ${getStatusColor(item)}">${item.status}</span></td></tr>
                     <tr><td class="font-semibold pr-2">Tanggal Pasang:</td><td>${item.tanggal_pasang || '-'}</td></tr>
@@ -478,13 +478,13 @@ function createPopupContent(item) {
         // Popup untuk Potensial
         return `
             <div class="p-2 min-w-[200px]">
-                <h3 class="font-bold text-lg mb-2 text-orange-600">📍 ${item.id}</h3>
+                <h3 class="font-bold text-lg mb-2 text-orange-600">📍 ${item.nama || item.id}</h3>
                 <div class="bg-orange-50 border-l-4 border-orange-400 p-2 mb-2">
                     <p class="text-sm font-semibold text-orange-800">Alasan Pemilihan Lokasi:</p>
                     <p class="text-sm text-gray-700">${item.keterangan || 'Tidak ada keterangan'}</p>
                 </div>
                 <table class="text-sm w-full">
-                    ${item.nama ? `<tr><td class="font-semibold pr-2">Nama:</td><td><strong>${item.nama}</strong></td></tr>` : ''}
+                    <tr><td class="font-semibold pr-2">ID:</td><td><span class="text-xs text-gray-500">${item.id}</span></td></tr>
                     <tr><td class="font-semibold pr-2">Kategori:</td><td>${item.kategori}</td></tr>
                     <tr><td class="font-semibold pr-2">Prioritas:</td><td><span class="px-2 py-1 rounded text-white text-xs" style="background-color: ${getStatusColor(item)}">${item.status}</span></td></tr>
                     <tr><td class="font-semibold pr-2">Lokasi:</td><td>${item.lokasi_detail || '-'}</td></tr>
