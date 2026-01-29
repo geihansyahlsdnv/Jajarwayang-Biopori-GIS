@@ -131,14 +131,19 @@ export const FirebaseService = {
     },
 
     /**
-     * Update biopori entry
+     * Update biopori entry - preserve existing data while updating only specified fields
      */
     async updateBiopori(id, data) {
         try {
+            // Get existing data first to preserve coordinates and other fields
+            const existingSnapshot = await get(ref(database, `biopori/${id}`));
+            const existingData = existingSnapshot.exists() ? existingSnapshot.val() : {};
+            
             const bioporiRef = ref(database, `biopori/${id}`);
             await set(bioporiRef, {
-                ...data,
-                id,
+                ...existingData,  // Preserve all existing data (including lat, lng, createdAt)
+                ...data,          // Override with new data
+                id,               // Ensure id is set
                 updatedAt: new Date().toISOString()
             });
             

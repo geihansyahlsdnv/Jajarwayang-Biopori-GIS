@@ -463,6 +463,7 @@ function createPopupContent(item) {
             <div class="p-2 min-w-[200px]">
                 <h3 class="font-bold text-lg mb-2 text-green-700">🌿 ${item.id}</h3>
                 <table class="text-sm w-full">
+                    ${item.nama ? `<tr><td class="font-semibold pr-2">Nama:</td><td><strong>${item.nama}</strong></td></tr>` : ''}
                     <tr><td class="font-semibold pr-2">Kategori:</td><td>${item.kategori}</td></tr>
                     <tr><td class="font-semibold pr-2">Status:</td><td><span class="px-2 py-1 rounded text-white text-xs" style="background-color: ${getStatusColor(item)}">${item.status}</span></td></tr>
                     <tr><td class="font-semibold pr-2">Tanggal Pasang:</td><td>${item.tanggal_pasang || '-'}</td></tr>
@@ -483,6 +484,7 @@ function createPopupContent(item) {
                     <p class="text-sm text-gray-700">${item.keterangan || 'Tidak ada keterangan'}</p>
                 </div>
                 <table class="text-sm w-full">
+                    ${item.nama ? `<tr><td class="font-semibold pr-2">Nama:</td><td><strong>${item.nama}</strong></td></tr>` : ''}
                     <tr><td class="font-semibold pr-2">Kategori:</td><td>${item.kategori}</td></tr>
                     <tr><td class="font-semibold pr-2">Prioritas:</td><td><span class="px-2 py-1 rounded text-white text-xs" style="background-color: ${getStatusColor(item)}">${item.status}</span></td></tr>
                     <tr><td class="font-semibold pr-2">Lokasi:</td><td>${item.lokasi_detail || '-'}</td></tr>
@@ -600,6 +602,7 @@ function openEditModal(id) {
 
     // Set values
     document.getElementById('edit-location-id').textContent = item.id;
+    document.getElementById('edit-input-nama').value = item.nama || '';
     document.getElementById('edit-input-kategori').value = item.kategori || '';
     document.getElementById('edit-input-status').value = item.status || '';
     document.getElementById('edit-input-tanggal').value = item.tanggal_pasang || '';
@@ -1131,6 +1134,7 @@ function showAddLocationModal(lat, lng) {
     const kategoriInput = document.getElementById('input-kategori');
     const statusInput = document.getElementById('input-status');
     const tanggalInput = document.getElementById('input-tanggal');
+    const namaInput = document.getElementById('input-nama');
     const lokasiInput = document.getElementById('input-lokasi');
     const keteranganInput = document.getElementById('input-keterangan');
     
@@ -1138,6 +1142,7 @@ function showAddLocationModal(lat, lng) {
     kategoriInput.value = '';
     statusInput.value = '';
     tanggalInput.value = '';
+    namaInput.value = '';
     lokasiInput.value = '';
     keteranganInput.value = '';
     
@@ -1239,6 +1244,7 @@ addLocationForm?.addEventListener('submit', async function(e) {
         id: generatedId,
         lat: lat,
         lng: lng,
+        nama: document.getElementById('input-nama').value,
         kategori: kategori,
         tanggal_pasang: document.getElementById('input-tanggal')?.value || '',
         lokasi_detail: document.getElementById('input-lokasi').value,
@@ -1429,6 +1435,7 @@ document.getElementById('edit-location-form')?.addEventListener('submit', async 
     try {
         // Update di Firebase
         const updatedData = {
+            nama: document.getElementById('edit-input-nama').value,
             kategori: kategori,
             status: status,
             tanggal_pasang: document.getElementById('edit-input-tanggal').value || '',
